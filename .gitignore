@@ -1,0 +1,9 @@
+﻿# Python artifacts
+__pycache__/
+*.pyc
+
+# Datasets (do not commit)
+data/**
+*.csv
+*.xlsx
+*.parquet

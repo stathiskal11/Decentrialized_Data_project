@@ -15,8 +15,7 @@ class PastryNode:
 
     def next_hop(self, target_id: int, neighborhood: List[int], visited: Set[int]) -> int:
         self_id = self.node_id
-        if self_id in visited:
-            return self_id
+
 
         # 1) leaf-set improvement
         best_leaf = self.leaf_set.closest_to(self_id, target_id)

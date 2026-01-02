@@ -1,7 +1,12 @@
 from __future__ import annotations
-from typing import Dict, Tuple
 
-def snapshot_state(nodes: Dict[int, "PastryNode"]) -> Dict[int, Tuple[Tuple[int, ...], Tuple[Tuple[int, int, int], ...]]]:
+from typing import Dict, Tuple, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from src.pastry.node import PastryNode
+
+
+def snapshot_state(nodes: Dict[int, PastryNode]) -> Dict[int, Tuple[...]]:
     snap = {}
     for nid, node in nodes.items():
         leaf = tuple(sorted(node.leaf_set.nodes))
