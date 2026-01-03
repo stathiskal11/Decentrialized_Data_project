@@ -1,7 +1,7 @@
 # test_chord_c2.py (balanced node ids for m = 20)
 import random
 import pandas as pd
-from src.chord.chord_node import ChordNode
+from chord_node import ChordNode
 from chord_simulator import run_periodic_maintenance
 
 def interval_size(a: int, b: int, mod: int) -> int:
