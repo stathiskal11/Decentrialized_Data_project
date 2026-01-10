@@ -134,6 +134,33 @@ class ChordNetwork:
             # hard safety bound
             if hops > len(self.nodes) + 5:
                 return current.id, hops
+    def _rebalance_all_keys(self) -> int:
+        """
+        Rebalance all key_id -> values after topology change.
+        Returns total migration hops (sum of routing hops per key_id).
+        """
+        if not self.nodes:
+            return 0
+
+        # 1) collect
+        all_data: Dict[int, list] = {}
+        with self._lock:
+            for node in self.nodes.values():
+                for key_id, vals in node.data.items():
+                    all_data.setdefault(key_id, []).extend(list(vals))
+                node.data.clear()
+
+        # 2) reinsert
+        migration_hops = 0
+        for key_id, vals in all_data.items():
+            start = self._random_existing_node_id()
+            dest_id, hops = self._route(start, key_id)
+            with self._lock:
+                # keep same structure: list of dicts
+                self.nodes[dest_id].data[key_id] = list(vals)
+            migration_hops += hops
+
+        return migration_hops
 
     # ---------- contract API ----------
     def build(self, n_nodes: int, seed: int = 0) -> None:
@@ -224,17 +251,20 @@ class ChordNetwork:
         self.nodes[new_id] = ChordNode(new_id, self.m_bits)
         self._rebuild_ring_and_fingers()
 
+        migration_hops = self._rebalance_all_keys()
+
         after = snapshot_state(self.nodes)
         update_cost = count_changed(before, after)
 
-        total = route_hops + update_cost
+        total = route_hops + update_cost + migration_hops
+
         self.metrics.record("join", total)
         return total
 
     def leave(self, node_id=None) -> int:
         """
         Remove one node.
-        Cost proxy = number of nodes whose pointers/fingers changed.
+        Cost proxy = nodes changed + migration_hops.
         """
         if not self.nodes:
             self.metrics.record("leave", 0)
@@ -247,17 +277,38 @@ class ChordNetwork:
             self.metrics.record("leave", 0)
             return 0
 
+        # collect all keys BEFORE removing node
+        all_data: Dict[int, list] = {}
+        with self._lock:
+            for node in self.nodes.values():
+                for key_id, vals in node.data.items():
+                    all_data.setdefault(key_id, []).extend(list(vals))
+
         before = snapshot_state(self.nodes)
         self.nodes.pop(node_id)
 
+        migration_hops = 0
         if self.nodes:
             self._rebuild_ring_and_fingers()
+
+            # clear stores then reinsert into new topology
+            with self._lock:
+                for node in self.nodes.values():
+                    node.data.clear()
+
+            for key_id, vals in all_data.items():
+                start = self._random_existing_node_id()
+                dest_id, hops = self._route(start, key_id)
+                with self._lock:
+                    self.nodes[dest_id].data[key_id] = list(vals)
+                migration_hops += hops
 
         after = snapshot_state(self.nodes)
         update_cost = count_changed(before, after)
 
-        self.metrics.record("leave", update_cost)
-        return update_cost
+        total = update_cost + migration_hops
+        self.metrics.record("leave", total)
+        return total
 
 
 # alias for contract friendliness (optional)

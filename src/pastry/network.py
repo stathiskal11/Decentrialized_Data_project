@@ -62,7 +62,31 @@ class PastryNetwork:
 
             current = nxt
             hops += 1
+    def _rebalance_all_keys(self) -> int:
+        """
+        Rebalance all (key,value) pairs after topology change.
+        Returns total migration hops (sum of routing hops per reinserted key).
+        """
+        if not self.nodes:
+            return 0
 
+        # 1) collect
+        all_items: List[Tuple[str, dict]] = []
+        for node in self.nodes.values():
+            all_items.extend(list(node.kv_store.items()))
+            node.kv_store.clear()
+
+        # 2) reinsert
+        migration_hops = 0
+        for key, value in all_items:
+            key_id = hash_128(key)
+            start = self._random_existing_node_id()
+            dest, hops = self._route(start, key_id)
+            insert_at(self.nodes[dest], key, value)
+            migration_hops += hops
+
+        return migration_hops
+    
     # ---------- contract API ----------
     def build(self, n_nodes: int, seed: int = 0) -> None:
         self.rng = random.Random(seed)
@@ -138,17 +162,20 @@ class PastryNetwork:
         self.nodes[new_id] = PastryNode(new_id, LeafSet(self.leaf_L), RoutingTable(self.base))
         self._rebuild_structures()
 
+        migration_hops = self._rebalance_all_keys()
+
         after = snapshot_state(self.nodes)
         update_cost = count_changed(before, after)
 
-        total = route_hops + update_cost
+        total = route_hops + update_cost + migration_hops
+
         self.metrics.record("join", total)
         return total
 
     def leave(self, node_id=None) -> int:
         """
         Remove one node.
-        Hop-cost = number of nodes whose tables changed (sim cost proxy).
+        Hop-cost = number of nodes whose tables changed (sim cost proxy) + migration_hops.
         """
         if not self.nodes:
             self.metrics.record("leave", 0)
@@ -161,16 +188,36 @@ class PastryNetwork:
             self.metrics.record("leave", 0)
             return 0
 
+        # collect all keys BEFORE removing node (so we don't lose departing node's keys)
+        all_items: List[Tuple[str, dict]] = []
+        for node in self.nodes.values():
+            all_items.extend(list(node.kv_store.items()))
+
         before = snapshot_state(self.nodes)
         self.nodes.pop(node_id)
 
+        migration_hops = 0
         if self.nodes:
             self._rebuild_structures()
 
+            # clear and reinsert all items into the new topology
+            for node in self.nodes.values():
+                node.kv_store.clear()
+
+            for key, value in all_items:
+                key_id = hash_128(key)
+                start = self._random_existing_node_id()
+                dest, hops = self._route(start, key_id)
+                insert_at(self.nodes[dest], key, value)
+                migration_hops += hops
+
         after = snapshot_state(self.nodes)
         update_cost = count_changed(before, after)
-        self.metrics.record("leave", update_cost)
-        return update_cost
+
+        total = update_cost + migration_hops
+        self.metrics.record("leave", total)
+        return total
+
 
 # alias for contract friendliness
 DHTNetwork = PastryNetwork
