@@ -1,0 +1,81 @@
+{
+  "pastry": {
+    "metrics": {
+      "insert": {
+        "count": 500,
+        "mean": 1.08,
+        "median": 1,
+        "p95": 2
+      },
+      "lookup": {
+        "count": 520,
+        "mean": 1.0865384615384615,
+        "median": 1,
+        "p95": 2
+      },
+      "update": {
+        "count": 100,
+        "mean": 1.17,
+        "median": 1,
+        "p95": 2
+      },
+      "delete": {
+        "count": 100,
+        "mean": 1.08,
+        "median": 1,
+        "p95": 2
+      }
+    },
+    "k_query": {
+      "K": 20,
+      "found_count": 20,
+      "total_hops": 18,
+      "mean_hops": 0.9
+    }
+  },
+  "chord": {
+    "metrics": {
+      "insert": {
+        "count": 500,
+        "mean": 2.992,
+        "median": 3,
+        "p95": 5
+      },
+      "lookup": {
+        "count": 520,
+        "mean": 2.9384615384615387,
+        "median": 3,
+        "p95": 5
+      },
+      "update": {
+        "count": 100,
+        "mean": 3.01,
+        "median": 3,
+        "p95": 4
+      },
+      "delete": {
+        "count": 100,
+        "mean": 2.84,
+        "median": 3,
+        "p95": 4
+      }
+    },
+    "k_query": {
+      "K": 20,
+      "found_count": 20,
+      "total_hops": 65,
+      "mean_hops": 3.25
+    }
+  },
+  "params": {
+    "csv": "data/archive/movies_dataset_cleaned/data_movies_clean.csv",
+    "N": 20,
+    "inserts": 500,
+    "lookups": 500,
+    "updates": 100,
+    "deletes": 100,
+    "join_leave": 0,
+    "K": 20,
+    "seed": 1
+  }
+}

@@ -1,0 +1,105 @@
+{
+  "pastry": {
+    "metrics": {
+      "insert": {
+        "count": 500,
+        "mean": 2.044,
+        "median": 2,
+        "p95": 4
+      },
+      "lookup": {
+        "count": 520,
+        "mean": 2.0076923076923077,
+        "median": 2,
+        "p95": 4
+      },
+      "update": {
+        "count": 100,
+        "mean": 1.99,
+        "median": 2,
+        "p95": 4
+      },
+      "delete": {
+        "count": 100,
+        "mean": 1.98,
+        "median": 2,
+        "p95": 4
+      },
+      "join": {
+        "count": 50,
+        "mean": 878.5,
+        "median": 879,
+        "p95": 912
+      },
+      "leave": {
+        "count": 50,
+        "mean": 869.54,
+        "median": 874,
+        "p95": 907
+      }
+    },
+    "k_query": {
+      "K": 20,
+      "found_count": 20,
+      "total_hops": 43,
+      "mean_hops": 2.15
+    }
+  },
+  "chord": {
+    "metrics": {
+      "insert": {
+        "count": 500,
+        "mean": 3.592,
+        "median": 4,
+        "p95": 5
+      },
+      "lookup": {
+        "count": 520,
+        "mean": 3.651923076923077,
+        "median": 4,
+        "p95": 5
+      },
+      "update": {
+        "count": 100,
+        "mean": 3.67,
+        "median": 4,
+        "p95": 5
+      },
+      "delete": {
+        "count": 100,
+        "mean": 3.54,
+        "median": 4,
+        "p95": 5
+      },
+      "join": {
+        "count": 50,
+        "mean": 1517.84,
+        "median": 1517,
+        "p95": 1562
+      },
+      "leave": {
+        "count": 50,
+        "mean": 1509.44,
+        "median": 1508,
+        "p95": 1556
+      }
+    },
+    "k_query": {
+      "K": 20,
+      "found_count": 20,
+      "total_hops": 70,
+      "mean_hops": 3.5
+    }
+  },
+  "params": {
+    "csv": "data/archive/movies_dataset_cleaned/data_movies_clean.csv",
+    "N": 50,
+    "inserts": 500,
+    "lookups": 500,
+    "updates": 100,
+    "deletes": 100,
+    "join_leave": 50,
+    "K": 20,
+    "seed": 1
+  }
+}
